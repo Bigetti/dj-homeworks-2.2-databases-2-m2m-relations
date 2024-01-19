@@ -1,5 +1,7 @@
 from django.db import models
 
+from django.urls import reverse
+
 
 
 class Tag(models.Model):
@@ -23,6 +25,19 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+    # Проверка, что у статьи есть хотя бы один основной раздел
+        if not self.article.scope_set.filter(is_main=True).exists():
+         raise ValidationError('Статья должна иметь хотя бы один основной раздел')
+
+     # Проверка, что у статьи нет более одного основного раздела
+        if self.is_main and self.article.scope_set.filter(is_main=True).exclude(pk=self.pk).exists():
+            raise ValidationError('Статья может иметь только один основной раздел')
+
+    def get_absolute_url(self):
+        """Возвращает URL-адрес для доступа к определенному экземпляру MyModelName."""
+        return reverse('model-detail-view', args=[str(self.id)])
 
 
 class Scope(models.Model):
