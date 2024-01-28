@@ -7,30 +7,31 @@ from .models import Article, Tag, Scope
 
 
 
-class RelationshipInlineFormset(BaseInlineFormSet):
+class ScopeInlineFormset(BaseInlineFormSet):
     def clean(self):
         for form in self.forms:
-            # В form.cleaned_data будет словарь с данными
-            # каждой отдельной формы, которые вы можете проверить
-            form.cleaned_data
-            # вызовом исключения ValidationError можно указать админке о наличие ошибки
-            # таким образом объект не будет сохранен,
-            # а пользователю выведется соответствующее сообщение об ошибке
-            raise ValidationError('Тут всегда ошибка')
-        return super().clean()  # вызываем базовый код переопределяемого метода
+            if form.cleaned_data.get('article') and form.cleaned_data['article'].pk:
+                # Ваша логика проверок, которая не зависит от свойств 'Article' до сохранения
+                pass
+            else:
+                raise ValidationError('Article instance needs to be saved first.')
+        return super().clean()
 
 
 
-class ScopeInline(admin.TabularInline):
+
+
+class ScopeInlineForm(admin.TabularInline):
     model = Scope
-    formset = RelationshipInlineFormset
+    formset = ScopeInlineFormset
+
 
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    inlines = [ScopeInline]
+    inlines = [ScopeInlineForm]
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    inlines = [ScopeInline]
+    inlines = [ScopeInlineForm]

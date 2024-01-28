@@ -29,12 +29,15 @@ class Article(models.Model):
 
     def clean(self):
         # Проверка, что у статьи есть хотя бы один основной раздел
-        if not self.scope_set.filter(is_main=True).exists():
+        if hasattr(self, 'scope_set') and not self.scope_set.filter(is_main=True).exists():
             raise ValidationError('Статья должна иметь хотя бы один основной раздел')
 
         # Проверка, что у статьи нет более одного основного раздела
-        if self.scope_set.filter(is_main=True).exclude(pk=self.pk).exists():
+        main_scopes = self.scope_set.filter(is_main=True).count()
+        if main_scopes > 1:
             raise ValidationError('Статья может иметь только один основной раздел')
+
+        super().clean()  # вызываем clean() родительской модели
 
 
 class Scope(models.Model):
