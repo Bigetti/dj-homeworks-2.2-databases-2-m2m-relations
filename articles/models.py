@@ -17,7 +17,7 @@ class Article(models.Model):
     text = models.TextField(verbose_name='Текст')
     published_at = models.DateTimeField(verbose_name='Дата публикации')
     image = models.ImageField(null=True, blank=True, verbose_name='Изображение',)
-    tags = models.ManyToManyField(Tag, through='Scope', verbose_name='Теги')
+    tags = models.ManyToManyField(Tag, related_name='articles', through='Scope', verbose_name='Теги')
 
     class Meta:
         verbose_name = 'Статья'
@@ -27,26 +27,14 @@ class Article(models.Model):
     def __str__(self):
         return self.title
 
-    def clean(self):
-        # Проверка, что у статьи есть хотя бы один основной раздел
-        if hasattr(self, 'scope_set') and not self.scope_set.filter(is_main=True).exists():
-            raise ValidationError('Статья должна иметь хотя бы один основной раздел')
-
-        # Проверка, что у статьи нет более одного основного раздела
-        main_scopes = self.scope_set.filter(is_main=True).count()
-        if main_scopes > 1:
-            raise ValidationError('Статья может иметь только один основной раздел')
-
-        super().clean()  # вызываем clean() родительской модели
-
 
 class Scope(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='scopes')
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name='scopes')
-    is_main = models.BooleanField(default=False, verbose_name='Остновной тег')
+    is_main = models.BooleanField(default=False, verbose_name='Основной тег')
 
     class Meta:
         unique_together = ('article', 'is_main')
 
     def __str__(self):
-        return f"{self.article.title} - {self.tag.name}"
+        return f"{self.article} - {self.tag}"
