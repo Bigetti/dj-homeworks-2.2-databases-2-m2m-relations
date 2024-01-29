@@ -16,9 +16,10 @@ class ScopeInlineFormset(BaseInlineFormSet):
                 # Ваша логика проверок, которая не зависит от свойств 'Article' до сохранения
                 continue
             elif form.cleaned_data.get('is_main'):
-                counter+=1
+                counter += 1
+        #   print('check', counter)
 
-        if counter < 1:
+        if counter == 0:
             raise ValidationError('Article instance needs to be saved first.')
         elif counter > 1:
             raise ValidationError('Must be only one main')
